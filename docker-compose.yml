@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - .:/var/www
+    working_dir: /var/www
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:stable
+    ports:
+      - "8081:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: appraisal
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "33069:3306"
+  adminer_backend:
+    image: michalhosna/adminer
+    ports:
+      - "8096:8080"
+    environment:
+      ADMINER_DB: "${DB_DATABASE:-app}"
+      ADMINER_PASSWORD: "${DB_PASSWORD:-secret}"
+      ADMINER_SERVER: "${DB_HOST:-mysql}"
+      ADMINER_USERNAME: "${DB_USERNAME:-app}"
+      ADMINER_AUTOLOGIN: 1
+    container_name: adminer_appraisal
